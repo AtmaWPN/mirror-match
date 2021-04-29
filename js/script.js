@@ -3,7 +3,7 @@ var stage = document.getElementById("gameCanvas");
 stage.width = 900;
 stage.height = 600;
 var ctx = stage.getContext("2d");
-
+alert();
 var main = function () {
 	//test code
 	ctx.fillStyle = "black";
