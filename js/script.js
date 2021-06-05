@@ -1,64 +1,67 @@
 //set up the canvas
 var stage = document.getElementById("gameCanvas");
-stage.width = STAGE_Width;
+stage.width = STAGE_WIDTH;
 stage.height = STAGE_HEIGHT;
 var ctx = stage.getContext("2d");
 
 var state = "game";
 
-class Tank {
-	constructor(x, y, hp, speed, baseDmg) {
+class PhysicsRect {
+	constructor(x, y, w, h, dx, dy) {
 		this.x = x;
 		this.y = y;
+		this.w = w;
+		this.h = h;
+		this.dx = dx;
+		this.dy = dy;
+	}
+	
+	update() {
+		x += dx;
+		y += dy;
+		// this collisions stuff isn't done the proper way
+		if (x > stage.width - width) {
+			x = stage.width - width;
+		} else if (x < 0) {
+			x = 0;
+		}
+		if (y > stage.height - height) {
+			y = stage.height - height;
+		} else if (y < 0) {
+			y = 0;
+		}
+	}
+}
+
+class Tank {
+	constructor(x, y, hp, speed, baseDmg) {
+		hitbox = new PhysicsRect(x, y, tankSize, tankSize, 0, 0);
 		this.hp = hp; // hp, speed, and baseDmg could be constants
 		this.speed = speed;
 		this.baseDmg = baseDmg;
-		this.dx = 0.0; // dx and dy are the coordinates of a normal vector
-		this.dy = 0.0;
 	}
 
-	input() {
-		this.dy = 0.0;
-		this.dx = 0.0;
+	update() {
+		hitbox.dy = 0.0;
+		hitbox.dx = 0.0;
 		if (keysDown[0] == true) {//w
-			this.dy = -1.0;
+			hitbox.dy = -1.0;
 		}
 		if (keysDown[1] == true) {//a
-			this.dx = -1.0;
+			hitbox.dx = -1.0;
 		}
 		if (keysDown[2] == true) {//s
-			this.dy = 1.0;
+			hitbox.dy = 1.0;
 		}
 		if (keysDown[3] == true) {//d
-			this.dx = 1.0;
+			hitbox.dx = 1.0;
 		}
-		if (this.dx != 0.0 && this.dy != 0.0) { //normalizes the direction vector
-			var magnitude = Math.sqrt(Math.pow(this.dx, 2) + Math.pow(this.dy, 2));
-			this.dx /= magnitude;
-			this.dy /= magnitude;
+		if (hitbox.dx != 0.0 && hitbox.dy != 0.0) { //normalizes the direction vector
+			var magnitude = Math.sqrt(Math.pow(hitbox.dx, 2) + Math.pow(hitbox.dy, 2));
+			hitbox.dx /= magnitude;
+			hitbox.dy /= magnitude;
 		}
-	}
-
-	collide() {// handles all collisions with the tank
-		//collision with stage boundaries
-		if (this.x > stage.width - tankSize) {
-			this.x = stage.width - tankSize;
-		} else if (this.x < 0) {
-			this.x = 0;
-		}
-		if (this.y > stage.height - tankSize) {
-			this.y = stage.height - tankSize;
-		} else if (this.y < 0) {
-			this.y = 0;
-		}
-	}
-
-	updatePosition() {
-		this.input();
-		//moves tank by the vector this.speed*<dx, dy>
-		this.x += this.dx * this.speed;
-		this.y += this.dy * this.speed;
-		this.collide();
+		hitbox.update();
 	}
 
 	shoot(weapon, dx, dy) {
@@ -71,13 +74,17 @@ class Tank {
 	}
 }
 
-let player = new Tank(20, 20, 5, 5, 5);
+class Projectile {
+	constructor(x, y, dx, dy) {
+		hitbox = new PhysicsRect(x, y, 10, 10, dx, dy);
+	}
 
-class AI extends Tank {
-	constructor(difficulty) {
-		this.difficulty = difficulty;
+	update() {
+		hitbox.update();
 	}
 }
+
+let player = new Tank(20, 20, 5, 5, 5);
 
 // the game object, it has a render and update function
 var game = {
